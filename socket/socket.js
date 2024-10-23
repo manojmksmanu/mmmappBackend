@@ -11,7 +11,7 @@ console.log(onlineUsers);
 function initSocket(server) {
   io = new Server(server, {
     cors: {
-      origin: "*", // Adjust this to match your frontend URL in production
+      origin: "*",
     },
   });
   console.log("Socket.io initialized");
@@ -24,7 +24,6 @@ function initSocket(server) {
       console.log(onlineUsers, "online");
       io.emit("getOnlineUsers", onlineUsers);
     });
-
     socket.on("joinRoom", (chatId) => {
       socket.join(chatId);
       console.log(`User ${socket.id} joined room ${chatId}`);
@@ -42,7 +41,6 @@ function initSocket(server) {
         replyingMessage,
         status,
       } = messageData;
-      console.log(messageId);
       const newMessage = new Message({
         chatId,
         sender,
@@ -55,10 +53,11 @@ function initSocket(server) {
         status: "sent",
       });
       try {
-        await sendMessage(messageData);
+        const updatedChat = await sendMessage(messageData);
+        io.emit("fetchAgain");
+        io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveMessage", newMessage);
-
-        // Emit message to the specific room
+        console.log(newMessage)
         console.log("Message emitted to chatId:", chatId);
       } catch (err) {
         console.log(err, "error");
@@ -99,7 +98,6 @@ function initSocket(server) {
     });
 
     socket.on("fetch", async (data) => {
-      console.log(data);
       try {
         io.emit("fetchAgain", data);
         console.log("inside try");

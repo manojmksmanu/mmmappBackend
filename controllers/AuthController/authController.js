@@ -139,6 +139,7 @@ exports.verifyEmail = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, userType, password } = req.body;
+  console.log(email)
   // Common logic for checking the userType
   const findUserByType = async (userType) => {
     const emailRegex = new RegExp(`^${email}$`, "i"); // Create case-insensitive regex for email

@@ -12,6 +12,7 @@ const messageSchema = new mongoose.Schema({
   replyingMessage: {
     type: Object,
   },
+  readBy: { type: []},
   status: { type: String, default: "unsent" },
 });
 

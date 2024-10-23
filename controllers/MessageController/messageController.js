@@ -1,6 +1,5 @@
 const Message = require("../../models/MessageModel/messageModel");
 const NewChat = require("../../models/NewChatModel/newChatModel");
-
 // Send message
 exports.sendMessage = async (messageData) => {
   const {
@@ -14,8 +13,7 @@ exports.sendMessage = async (messageData) => {
     replyingMessage,
     status,
   } = messageData;
-  // try {
-  // Create the new message
+  console.log(sender);
   const newMessage = await Message.create({
     chatId,
     sender,
@@ -25,26 +23,19 @@ exports.sendMessage = async (messageData) => {
     fileType,
     messageId,
     replyingMessage,
+    readBy: [sender],
     status: "sent",
   });
-  console.log(newMessage);
-  // Update the latest message in the chat and ensure updatedAt is set
+
   const updatedChat = await NewChat.findOneAndUpdate(
     { _id: chatId },
     {
       latestMessage: newMessage,
-      updatedAt: Date.now(), // Ensure updatedAt is manually set
+      updatedAt: Date.now(),
     },
     { new: true }
   ).populate("latestMessage");
-
-  //   res
-  //     .status(201)
-  //     .json({ message: "Message created successfully", newMessage });
-  // } catch (error) {
-  //   console.error("Error creating message:", error);
-  //   res.status(500).json({ message: "Server Error" });
-  // }
+  return updatedChat;
 };
 // Send message
 exports.sendDocument = async (messageData) => {
@@ -133,3 +124,42 @@ exports.forwardMessages = async (req, res) => {
       .json({ error: "Failed to forward messages", details: error.message });
   }
 };
+
+exports.markMessagesAsRead = async (req, res) => {
+  const { chatId, userId } = req.body;
+
+  // Validate input
+  if (!chatId || !userId) {
+    return res.status(400).send("chatId and userId are required");
+  }
+
+  try {
+    const messages = await Message.find({ chatId });
+
+    // Check if messages were found
+    if (!messages.length) {
+      console.log(`No messages found for chatId: ${chatId}`);
+      return res.status(404).send("No messages found");
+    }
+
+    const updates = messages.map(async (message) => {
+      // Check if user has already read the message
+      if (!message.readBy.includes(userId)) {
+        message.readBy.push(userId);
+        message.status = "read";
+        return await message.save(); // Await here to handle save errors
+      }
+    });
+
+    // Await all updates
+    await Promise.all(updates);
+    console.log(
+      `Marked messages as read for user: ${userId} in chatId: ${chatId}`
+    );
+    res.status(200).send("Messages marked as read successfully");
+  } catch (error) {
+    console.error("Error marking messages as read:", error.message || error);
+    return res.status(500).send("Unable to mark messages as read");
+  }
+};
+

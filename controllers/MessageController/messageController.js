@@ -96,6 +96,32 @@ exports.getMessages = async (req, res) => {
     throw new Error(error.message);
   }
 };
+//Get All Messages Related To user
+exports.getAllMessages = async (req, res) => {
+  const { userId } = req.params; // Assuming userId is sent in the request parameters
+  console.log(userId, "hit this");
+  try {
+    // Fetch all chats that the user is a part of
+    const chats = await NewChat.find({ "users.user": userId }).select("_id"); // Ensure the userId exists in the users array
+
+    // Check if any chats were found
+    if (!chats.length) {
+      return res.status(404).json({ message: "No chats found for this user" });
+    }
+
+    // Get an array of chat IDs
+    const chatIds = chats.map((chat) => chat._id);
+
+    // Fetch messages from all chats the user is part of
+    const messages = await Message.find({ chatId: { $in: chatIds } })
+      .populate("sender", "name pic email")
+      .populate("chatId");
+
+    res.json(messages);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 exports.forwardMessages = async (req, res) => {
   const { chatId, messages, loggedUserId, loggedUserName } = req.body;

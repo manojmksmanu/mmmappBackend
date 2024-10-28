@@ -50,6 +50,7 @@ function initSocket(server) {
         fileType,
         messageId,
         replyingMessage,
+        readBy: [sender],
         status: "sent",
       });
       try {
@@ -57,7 +58,7 @@ function initSocket(server) {
         io.emit("fetchAgain");
         io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveMessage", newMessage);
-        console.log(newMessage)
+        console.log(newMessage);
         console.log("Message emitted to chatId:", chatId);
       } catch (err) {
         console.log(err, "error");

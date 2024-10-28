@@ -142,9 +142,17 @@ exports.markMessagesAsRead = async (req, res) => {
       return res.status(404).send("No messages found");
     }
 
+    // Assuming you have a way to get all user IDs in the chat
+    const usersInChat = await getUsersInChat(chatId); // Implement this function based on your chat structure
+
     const updates = messages.map(async (message) => {
-      // Check if user has already read the message
-      if (!message.readBy.includes(userId)) {
+      // Check if all users in the chat have read the message
+      const allUsersRead = usersInChat.every((user) =>
+        message.readBy.includes(user)
+      );
+
+      // If the user has not read the message and all users have read it, update the status
+      if (!message.readBy.includes(userId) && allUsersRead) {
         message.readBy.push(userId);
         message.status = "read";
         return await message.save(); // Await here to handle save errors
@@ -163,3 +171,9 @@ exports.markMessagesAsRead = async (req, res) => {
   }
 };
 
+// Example function to get users in chat - Implement based on your chat model
+const getUsersInChat = async (chatId) => {
+  // Fetch chat details from the database to get user IDs
+  const chat = await Chat.findById(chatId).select("userIds"); // Adjust based on your chat model
+  return chat ? chat.userIds : []; // Assuming userIds is an array of user IDs in the chat
+};

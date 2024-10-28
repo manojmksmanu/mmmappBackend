@@ -15,7 +15,7 @@ router.post("/message-mark-read", protect, markMessagesAsRead);
 
 // Get messages (protected)
 router.get("/messages/:chatId", protect, getMessages);
-// Get All messages related to user 
-router.get("/messages/all/:userId",protect,getAllMessages)
+// Get All messages related to user
+router.get("/messages/all/:userId", protect, getAllMessages);
 router.post("/forwardMessages", protect, forwardMessages);
 module.exports = router;

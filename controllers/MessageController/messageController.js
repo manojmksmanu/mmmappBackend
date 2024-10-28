@@ -96,7 +96,7 @@ exports.getMessages = async (req, res) => {
     throw new Error(error.message);
   }
 };
-//Get All Messages Related To user
+// Get All messages related to usre
 exports.getAllMessages = async (req, res) => {
   const { userId } = req.params; // Assuming userId is sent in the request parameters
   console.log(userId, "hit this");
@@ -151,13 +151,52 @@ exports.forwardMessages = async (req, res) => {
   }
 };
 
+// exports.markMessagesAsRead = async (req, res) => {
+//   const { chatId, userId } = req.body;
+
+//   // Validate input
+//   if (!chatId || !userId) {
+//     return res.status(400).send("chatId and userId are required");
+//   }
+
+//   try {
+//     const messages = await Message.find({ chatId });
+
+//     // Check if messages were found
+//     if (!messages.length) {
+//       console.log(`No messages found for chatId: ${chatId}`);
+//       return res.status(404).send("No messages found");
+//     }
+
+//     const updates = messages.map(async (message) => {
+//       // Check if user has already read the message
+//       if (!message.readBy.includes(userId)) {
+//         message.readBy.push(userId);
+//         message.status = "read";
+//         return await message.save(); // Await here to handle save errors
+//       }
+//     });
+
+//     // Await all updates
+//     await Promise.all(updates);
+//     console.log(
+//       `Marked messages as read for user: ${userId} in chatId: ${chatId}`
+//     );
+//     res.status(200).send("Messages marked as read successfully");
+//   } catch (error) {
+//     console.error("Error marking messages as read:", error.message || error);
+//     return res.status(500).send("Unable to mark messages as read");
+//   }
+// };
 exports.markMessagesAsRead = async (req, res) => {
   const { chatId, userId } = req.body;
-
+  console.log("mark");
   // Validate input
   if (!chatId || !userId) {
     return res.status(400).send("chatId and userId are required");
   }
+
+  console.log("Request Body:", req.body); // Log the request body
 
   try {
     const messages = await Message.find({ chatId });
@@ -165,22 +204,26 @@ exports.markMessagesAsRead = async (req, res) => {
     // Check if messages were found
     if (!messages.length) {
       console.log(`No messages found for chatId: ${chatId}`);
-      return res.status(404).send("No messages found");
+      return res.status(200).send("No messages found");
     }
 
-    // Assuming you have a way to get all user IDs in the chat
-    const usersInChat = await getUsersInChat(chatId); // Implement this function based on your chat structure
+    // Find the chat associated with the chatId
+    const chat = await NewChat.findById(chatId).populate("users.user"); // Assuming 'users' references to user models
+
+    if (!chat) {
+      console.log(`Chat not found for chatId: ${chatId}`);
+      return res.status(404).send("Chat not found");
+    }
+
+    const allUserIds = chat.users.map((user) => user.user._id.toString());
 
     const updates = messages.map(async (message) => {
-      // Check if all users in the chat have read the message
-      const allUsersRead = usersInChat.every((user) =>
-        message.readBy.includes(user)
-      );
-
-      // If the user has not read the message and all users have read it, update the status
-      if (!message.readBy.includes(userId) && allUsersRead) {
+      // Check if user has already read the message
+      if (!message.readBy.includes(userId)) {
         message.readBy.push(userId);
-        message.status = "read";
+        // Check if all users have read the message
+        const allRead = allUserIds.every((id) => message.readBy.includes(id));
+        message.status = allRead ? "read" : "sent"; // Set status based on readBy array
         return await message.save(); // Await here to handle save errors
       }
     });
@@ -192,14 +235,10 @@ exports.markMessagesAsRead = async (req, res) => {
     );
     res.status(200).send("Messages marked as read successfully");
   } catch (error) {
-    console.error("Error marking messages as read:", error.message || error);
+    console.error(
+      "Error marking messages as read:",
+      error.response ? error.response.data : error.message
+    );
     return res.status(500).send("Unable to mark messages as read");
   }
-};
-
-// Example function to get users in chat - Implement based on your chat model
-const getUsersInChat = async (chatId) => {
-  // Fetch chat details from the database to get user IDs
-  const chat = await Chat.findById(chatId).select("userIds"); // Adjust based on your chat model
-  return chat ? chat.userIds : []; // Assuming userIds is an array of user IDs in the chat
 };

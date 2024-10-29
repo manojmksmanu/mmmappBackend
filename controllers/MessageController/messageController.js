@@ -1,42 +1,90 @@
 const Message = require("../../models/MessageModel/messageModel");
 const NewChat = require("../../models/NewChatModel/newChatModel");
 // Send message
+// exports.sendMessage = async (messageData) => {
+//   const {
+//     chatId,
+//     sender,
+//     senderName,
+//     message,
+//     fileUrl,
+//     fileType,
+//     messageId,
+//     replyingMessage,
+//     status,
+//   } = messageData;
+//   console.log(sender, "sender");
+//   const newMessage = await Message.create({
+//     chatId,
+//     sender,
+//     senderName,
+//     message,
+//     fileUrl,
+//     fileType,
+//     messageId,
+//     replyingMessage,
+//     readBy: [sender],
+//     status: "sent",
+//   });
+//   console.log(newMessage, "newmessage");
+//   const updatedChat = await NewChat.findOneAndUpdate(
+//     { _id: chatId },
+//     {
+//       latestMessage: newMessage,
+//       updatedAt: Date.now(),
+//     },
+//     { new: true }
+//   ).populate("latestMessage");
+//   console.log(updatedChat, "updated");
+//   return updatedChat;
+// };
 exports.sendMessage = async (messageData) => {
-  const {
-    chatId,
-    sender,
-    senderName,
-    message,
-    fileUrl,
-    fileType,
-    messageId,
-    replyingMessage,
-    status,
-  } = messageData;
-  console.log(sender);
-  const newMessage = await Message.create({
-    chatId,
-    sender,
-    senderName,
-    message,
-    fileUrl,
-    fileType,
-    messageId,
-    replyingMessage,
-    readBy: [sender],
-    status: "sent",
-  });
+  try {
+    const {
+      chatId,
+      sender,
+      senderName,
+      message,
+      fileUrl,
+      fileType,
+      messageId,
+      replyingMessage,
+      status,
+    } = messageData;
 
-  const updatedChat = await NewChat.findOneAndUpdate(
-    { _id: chatId },
-    {
-      latestMessage: newMessage,
-      updatedAt: Date.now(),
-    },
-    { new: true }
-  ).populate("latestMessage");
-  return updatedChat;
+    console.log(sender, "sender");
+
+    const newMessage = await Message.create({
+      chatId,
+      sender,
+      senderName,
+      message,
+      fileUrl,
+      fileType,
+      messageId,
+      replyingMessage,
+      readBy: [sender],
+      status: "sent",
+    });
+
+    console.log(newMessage, "newmessage");
+
+    const updatedChat = await NewChat.findOneAndUpdate(
+      { _id: chatId },
+      {
+        latestMessage: newMessage,
+        updatedAt: Date.now(),
+      },
+      { new: true }
+    ).populate("latestMessage");
+
+    console.log(updatedChat, "updated");
+    return updatedChat;
+  } catch (error) {
+    console.error("Error in sendMessage:", error);
+  }
 };
+
 // Send message
 exports.sendDocument = async (messageData) => {
   const {
@@ -61,6 +109,7 @@ exports.sendDocument = async (messageData) => {
     fileType,
     messageId,
     replyingMessage,
+    readBy: [sender],
     status: "sent",
   });
   console.log(newMessage);

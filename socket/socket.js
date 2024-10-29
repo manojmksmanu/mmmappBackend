@@ -55,7 +55,7 @@ function initSocket(server) {
       });
       try {
         const updatedChat = await sendMessage(messageData);
-        io.emit("fetchAgain",'fetch');
+        io.emit("fetchAgain", chatId);
         io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveMessage", newMessage);
         console.log(newMessage);
@@ -86,15 +86,17 @@ function initSocket(server) {
         fileType,
         messageId,
         replyingMessage,
+        readBy: [sender],
         status: "sent",
       });
       try {
-        await sendDocument(messageData); // Persist message to DB
+        const updatedChat = await sendDocument(messageData);
+        io.emit("fetchAgain", chatId);
+        io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveDocument", newMessage);
         console.log("Document emitted to chatId:", chatId);
       } catch (err) {
         console.error("Error sending document:", err);
-        // Optionally handle resending logic here
       }
     });
 

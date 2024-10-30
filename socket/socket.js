@@ -16,12 +16,10 @@ function initSocket(server) {
   });
   console.log("Socket.io initialized");
   io.on("connection", (socket) => {
-    console.log(onlineUsers, "connection");
     socket.on("userOnline", (userId) => {
       if (!onlineUsers.some((user) => user.userId === userId)) {
         onlineUsers.push({ userId, socketId: socket.id });
       }
-      console.log(onlineUsers, "online");
       io.emit("getOnlineUsers", onlineUsers);
     });
     socket.on("joinRoom", (chatId) => {
@@ -99,14 +97,32 @@ function initSocket(server) {
         console.error("Error sending document:", err);
       }
     });
-
-    socket.on("fetch", async (data) => {
-      try {
-        io.emit("fetchAgain", data);
-        console.log("inside try");
-      } catch {
-        console.log("inside catch");
-      }
+    socket.on("markmessagetoread", async (data) => {
+      const {
+        loggedUserId,
+        chatId,
+        sender,
+        senderName,
+        message,
+        fileUrl,
+        fileType,
+        messageId,
+        readBy,
+        replyingMessage,
+      } = data;
+      const newMessage = {
+        chatId,
+        sender,
+        senderName,
+        message,
+        fileUrl,
+        fileType,
+        messageId,
+        replyingMessage,
+        readBy: [...(readBy || []), loggedUserId],
+        status: "sent",
+      };
+      io.to(chatId).emit("resultofmarkmessagetoread", newMessage);
     });
 
     socket.on(

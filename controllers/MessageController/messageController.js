@@ -239,7 +239,7 @@ exports.forwardMessages = async (req, res) => {
 // };
 exports.markMessagesAsRead = async (req, res) => {
   const { chatId, userId } = req.body;
-  console.log("mark");
+  console.log("mark",chatId,userId);
   // Validate input
   if (!chatId || !userId) {
     return res.status(400).send("chatId and userId are required");

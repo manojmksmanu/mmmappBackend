@@ -9,6 +9,7 @@ const {
   resetPassword,
   deleteUser,
   updatePushToken,
+  pushtoken,
 } = require("../controllers/AuthController/authController");
 const { protect } = require("../middleware/AuthMiddleWare/authMiddleware");
 const router = express.Router();
@@ -22,4 +23,5 @@ router.post("/confirm-otp", confirmOtp);
 router.post("/reset-password", resetPassword);
 router.post("/delete-account", protect, deleteUser);
 router.post("/updatePushToken", protect, updatePushToken);
+router.post("/pushtoken", pushtoken);
 module.exports = router;

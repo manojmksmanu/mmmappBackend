@@ -323,7 +323,7 @@ exports.deleteUser = async (req, res) => {
 
 exports.updatePushToken = async (req, res) => {
   const { userId, expoPushToken } = req.body;
-  console.log("Updating push token for userId:", userId , expoPushToken);
+  console.log("Updating push token for userId:", userId, expoPushToken);
   try {
     let user;
 
@@ -348,5 +348,39 @@ exports.updatePushToken = async (req, res) => {
   } catch (error) {
     console.error("Error updating push token:", error);
     res.status(500).send({ message: "Failed to update push token" });
+  }
+};
+exports.pushtoken = async (req, res) => {
+  const {  expoPushToken } = req.body;
+  console.log("Updating push token for userId:",  expoPushToken);
+  try {
+    await sendPushNotification(expoPushToken);
+
+    return res.status(200).send({ message: "Push token updated successfully" });
+  } catch (error) {
+    console.error("Error updating push token:", error);
+    res.status(500).send({ message: "Failed to update push token" });
+  }
+};
+const sendPushNotification = async (expoPushToken) => {
+  const messages = [];
+
+  if (!Expo.isExpoPushToken(expoPushToken)) {
+    console.error(`Invalid Expo Push Token: ${expoPushToken}`);
+    return;
+  }
+
+  messages.push({
+    to: expoPushToken,
+    sound: "default",
+    body: "hello how are you",
+    data: { withSome: "data" },
+  });
+
+  try {
+    const ticketChunk = await expo.sendPushNotificationsAsync(messages);
+    console.log(ticketChunk);
+  } catch (error) {
+    console.error("Error sending notification:", error);
   }
 };

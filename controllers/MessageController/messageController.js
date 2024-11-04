@@ -1,7 +1,6 @@
 const Message = require("../../models/MessageModel/messageModel");
 const NewChat = require("../../models/NewChatModel/newChatModel");
 const axios = require("axios");
-const expo = new Expo();
 
 // Send message
 // exports.sendMessage = async (messageData) => {
@@ -84,10 +83,10 @@ exports.sendMessage = async (messageData) => {
       const sendNotificationToUsers = otherUsers.map(async (user) => {
         console.log(user.user, "hello");
         const expoPushToken = user.user.expoPushToken;
-        if (Expo.isExpoPushToken(expoPushToken)) {
-          await sendPushNotification(expoPushToken, message);
+        if (expoPushToken) {
+          return sendPushNotification(expoPushToken, message);
         } else {
-          console.error(`Invalid Expo Push Token for user ID: ${recipientId}`);
+          console.warn(`No Expo push token for user: ${user.user._id}`);
         }
       });
       await Promise.all(sendNotificationToUsers);

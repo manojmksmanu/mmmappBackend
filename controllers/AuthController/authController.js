@@ -8,7 +8,6 @@ const crypto = require("crypto");
 const { sendVerificationEmail } = require("../../misc/emailSendFunction");
 const { sendEmail } = require("../../misc/emailSendFunction");
 const { getSocketInstance } = require("../../socket/socket");
-const expo = new Expo();
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {

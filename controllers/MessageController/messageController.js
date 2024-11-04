@@ -1,5 +1,7 @@
 const Message = require("../../models/MessageModel/messageModel");
 const NewChat = require("../../models/NewChatModel/newChatModel");
+const axios = require("axios");
+
 // Send message
 // exports.sendMessage = async (messageData) => {
 //   const {
@@ -75,7 +77,7 @@ exports.sendMessage = async (messageData) => {
       .populate({ path: "users.user" })
       .populate("latestMessage");
     const otherUsers = updatedChat.users.filter(
-      (user) => user.user && user.user._id.toString() !== sender
+      (user) => user.user && user.user._id.toString() === sender
     );
     if (otherUsers.length > 0) {
       const sendNotificationToUsers = otherUsers.map(async (user) => {

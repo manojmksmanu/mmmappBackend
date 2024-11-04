@@ -139,7 +139,7 @@ exports.verifyEmail = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, userType, password } = req.body;
-  console.log(email)
+  console.log(email);
   // Common logic for checking the userType
   const findUserByType = async (userType) => {
     const emailRegex = new RegExp(`^${email}$`, "i"); // Create case-insensitive regex for email
@@ -318,5 +318,48 @@ exports.deleteUser = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Server error", error });
+  }
+};
+
+exports.updatePushToken = async (req, res) => {
+  const { userId, expoPushToken } = req.body; // Changed adminId to userId for flexibility
+console.log(userId,'jksdfkjskldfjl')
+  try {
+    let user;
+
+    // Check if user exists in Admin collection
+    user = await Admin.findById(userId);
+    if (user) {
+      await Admin.findByIdAndUpdate(userId, { expoPushToken }, { new: true });
+      return res
+        .status(200)
+        .send({ message: "Push token updated successfully for Admin" });
+    }
+
+    // Check if user exists in Student collection
+    user = await Student.findById(userId);
+    if (user) {
+      await Student.findByIdAndUpdate(userId, { expoPushToken }, { new: true });
+      return res
+        .status(200)
+        .send({ message: "Push token updated successfully for Student" });
+    }
+
+    // Check if user exists in Tutor collection
+    user = await Tutor.findById(userId);
+    if (user) {
+      await Tutor.findByIdAndUpdate(userId, { expoPushToken }, { new: true });
+      return res
+        .status(200)
+        .send({ message: "Push token updated successfully for Tutor" });
+    }
+
+    // If no user was found
+    return res
+      .status(404)
+      .send({ message: "User not found in any collection" });
+  } catch (error) {
+    console.error("Error updating push token:", error); // Log the error for debugging
+    res.status(500).send({ message: "Failed to update push token" });
   }
 };

@@ -51,9 +51,7 @@ exports.sendMessage = async (messageData) => {
       replyingMessage,
       status,
     } = messageData;
-
     console.log(sender, "sender");
-
     const newMessage = await Message.create({
       chatId,
       sender,
@@ -66,9 +64,6 @@ exports.sendMessage = async (messageData) => {
       readBy: [sender],
       status: "sent",
     });
-
-    console.log(newMessage, "newmessage");
-
     const updatedChat = await NewChat.findOneAndUpdate(
       { _id: chatId },
       {
@@ -76,15 +71,51 @@ exports.sendMessage = async (messageData) => {
         updatedAt: Date.now(),
       },
       { new: true }
-    ).populate("latestMessage");
-
-    console.log(updatedChat, "updated");
+    )
+      .populate({ path: "users.user" })
+      .populate("latestMessage");
+    const otherUsers = updatedChat.users.filter(
+      (user) => user.user && user.user._id.toString() !== sender
+    );
+    if (otherUsers.length > 0) {
+      const sendNotificationToUsers = otherUsers.map(async (user) => {
+        console.log(user.user, "hello");
+        const expoPushToken = user.user.expoPushToken;
+        if (expoPushToken) {
+          return sendPushNotification(expoPushToken, message);
+        } else {
+          console.warn(`No Expo push token for user: ${user.user._id}`);
+        }
+      });
+      await Promise.all(sendNotificationToUsers);
+      // You can perform further actions if needed
+    } else {
+      console.log("This user is the only participant in the chat.");
+    }
+    console.log("finish");
     return updatedChat;
   } catch (error) {
     console.error("Error in sendMessage:", error);
   }
 };
+const sendPushNotification = async (expoPushToken, message) => {
+  const payload = {
+    to: expoPushToken,
+    title: "New Message",
+    body: message,
+    data: { extraData: "additional info" },
+  };
 
+  try {
+    const response = await axios.post(
+      "https://exp.host/--/api/v2/push/send",
+      payload
+    );
+    console.log("Notification sent successfully:", response.data);
+  } catch (error) {
+    console.error("Error sending notification:", error);
+  }
+};
 // Send message
 exports.sendDocument = async (messageData) => {
   const {
@@ -239,7 +270,7 @@ exports.forwardMessages = async (req, res) => {
 // };
 exports.markMessagesAsRead = async (req, res) => {
   const { chatId, userId } = req.body;
-  console.log("mark",chatId,userId);
+  console.log("mark", chatId, userId);
   // Validate input
   if (!chatId || !userId) {
     return res.status(400).send("chatId and userId are required");

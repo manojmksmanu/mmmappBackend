@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const messageSchema = new mongoose.Schema({
   chatId: { type: String, required: true },
   sender: { type: String, required: true },
-  senderName: { type: String, required: true },
+  senderName: { type: String },
   message: { type: String, required: true },
   messageId: { type: String },
   fileUrl: { type: String, default: null },
@@ -12,7 +12,7 @@ const messageSchema = new mongoose.Schema({
   replyingMessage: {
     type: Object,
   },
-  readBy: { type: []},
+  readBy: { type: [] },
   status: { type: String, default: "unsent" },
 });
 

@@ -51,12 +51,12 @@ function initSocket(server) {
         readBy: [sender],
         status: "sent",
       });
+      console.log('send socket')
       try {
         const updatedChat = await sendMessage(messageData);
         io.emit("fetchAgain", chatId);
         io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveMessage", newMessage);
-        console.log(newMessage);
         console.log("Message emitted to chatId:", chatId);
       } catch (err) {
         console.log(err, "error");

@@ -1,7 +1,9 @@
 const Message = require("../../models/MessageModel/messageModel");
 const NewChat = require("../../models/NewChatModel/newChatModel");
 const axios = require("axios");
+const { Expo } = require("expo-server-sdk");
 
+const expo = new Expo();
 // Send message
 // exports.sendMessage = async (messageData) => {
 //   const {
@@ -101,19 +103,23 @@ exports.sendMessage = async (messageData) => {
   }
 };
 const sendPushNotification = async (expoPushToken, message) => {
-  const payload = {
+  const messages = [];
+
+  if (!Expo.isExpoPushToken(expoPushToken)) {
+    console.error(`Invalid Expo Push Token: ${expoPushToken}`);
+    return;
+  }
+
+  messages.push({
     to: expoPushToken,
-    title: "New Message",
+    sound: "default",
     body: message,
-    data: { extraData: "additional info" },
-  };
+    data: { withSome: "data" },
+  });
 
   try {
-    const response = await axios.post(
-      "https://exp.host/--/api/v2/push/send",
-      payload
-    );
-    console.log("Notification sent successfully:", response.data);
+    const ticketChunk = await expo.sendPushNotificationsAsync(messages);
+    console.log(ticketChunk);
   } catch (error) {
     console.error("Error sending notification:", error);
   }

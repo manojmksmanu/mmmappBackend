@@ -83,10 +83,10 @@ exports.sendMessage = async (messageData) => {
       const sendNotificationToUsers = otherUsers.map(async (user) => {
         console.log(user.user, "hello");
         const expoPushToken = user.user.expoPushToken;
-        if (expoPushToken) {
-          return sendPushNotification(expoPushToken, message);
+        if (Expo.isExpoPushToken(expoPushToken)) {
+          await sendPushNotification(expoPushToken, message);
         } else {
-          console.warn(`No Expo push token for user: ${user.user._id}`);
+          console.error(`Invalid Expo Push Token for user ID: ${recipientId}`);
         }
       });
       await Promise.all(sendNotificationToUsers);

@@ -53,7 +53,7 @@ function initSocket(server) {
       });
       console.log('send socket')
       try {
-        const updatedChat = await sendMessage(messageData);
+        const updatedChat = await sendMessage(messageData,onlineUsers);
         io.emit("fetchAgain", chatId);
         io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveMessage", newMessage);

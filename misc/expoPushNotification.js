@@ -50,7 +50,16 @@ const sendPushNotification = async (expoPushToken, messageBody, data = {}) => {
       to: expoPushToken,
       sound: "default",
       body: messageBody,
-      data: data || {}, // Ensure that data is always an object
+      data: data || {},
+      android: {
+        icon: "https://cdn-icons-png.flaticon.com/128/5540/5540520.png", // Replace with your icon URL or local asset
+        priority: "high", // Optional, to set the priority of the notification
+      },
+      ios: {
+        sound: "default",
+        badge: 1, // Optionally, set the badge count (usually used for unread messages)
+        icon: "https://cdn-icons-png.flaticon.com/128/5540/5540520.png", // Optionally set a custom icon for iOS (ensure it's included in your app assets)
+      },
     };
 
     try {
@@ -65,7 +74,6 @@ const sendPushNotification = async (expoPushToken, messageBody, data = {}) => {
   }
 };
 
-module.exports = sendPushNotification;
 
 
 module.exports = sendPushNotification;

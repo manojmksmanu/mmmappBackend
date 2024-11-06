@@ -144,7 +144,8 @@ exports.sendMessage = async (messageData, onlineUsers) => {
       const sendNotificationToUsers = offlineUsers.map(async (user) => {
         try {
           console.log(user.user, "Sending notification to offline user");
-          const messageBody = `${senderName}: ${message}`; // Customize the message as needed
+          const messageBody = ` ${message}`; // Customize the message as needed
+          const title = ` ${senderName}`; // Customize the message as needed
           const data = {
             chatId,
             sender,
@@ -160,7 +161,7 @@ exports.sendMessage = async (messageData, onlineUsers) => {
           const expoPushToken = user.user.expoPushToken;
           if (expoPushToken) {
             // Send push notification
-            await sendPushNotification(expoPushToken, messageBody, data);
+            await sendPushNotification(expoPushToken, title,messageBody, data);
           } else {
             console.warn(`No Expo push token for user: ${user.user._id}`);
           }

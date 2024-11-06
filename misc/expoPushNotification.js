@@ -31,7 +31,12 @@ const expo = new Expo();
 //     console.error("Error fetching user or sending notifications:", error);
 //   }
 // };
-const sendPushNotification = async (expoPushToken, messageBody, data = {}) => {
+const sendPushNotification = async (
+  expoPushToken,
+  title,
+  messageBody,
+  data = {}
+) => {
   const expo = new Expo(); // Create an instance of Expo
 
   try {
@@ -49,6 +54,7 @@ const sendPushNotification = async (expoPushToken, messageBody, data = {}) => {
     const message = {
       to: expoPushToken,
       sound: "default",
+      title: "title",
       body: messageBody,
       data: data || {},
       android: {
@@ -73,7 +79,5 @@ const sendPushNotification = async (expoPushToken, messageBody, data = {}) => {
     console.error("Error fetching user or sending notification:", error);
   }
 };
-
-
 
 module.exports = sendPushNotification;

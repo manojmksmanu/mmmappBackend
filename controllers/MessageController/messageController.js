@@ -1,3 +1,4 @@
+const sendPushNotification = require("../../misc/expoPushNotification");
 const Message = require("../../models/MessageModel/messageModel");
 const NewChat = require("../../models/NewChatModel/newChatModel");
 const axios = require("axios");
@@ -84,9 +85,22 @@ exports.sendMessage = async (messageData) => {
     if (otherUsers.length > 0) {
       const sendNotificationToUsers = otherUsers.map(async (user) => {
         console.log(user.user, "hello");
+        const messageBody = `${senderName}: ${message}`; // Customize as needed
+        const data = {
+          chatId,
+          sender,
+          senderName,
+          messageId,
+          message,
+          fileUrl,
+          fileType,
+          replyingMessage,
+          status: "sent", // Or use dynamic status
+        };
+
         const expoPushToken = user.user.expoPushToken;
         if (expoPushToken) {
-          return sendPushNotification(expoPushToken, message);
+          return sendPushNotification(expoPushToken, messageBody, data);
         } else {
           console.warn(`No Expo push token for user: ${user.user._id}`);
         }
@@ -102,28 +116,7 @@ exports.sendMessage = async (messageData) => {
     console.error("Error in sendMessage:", error);
   }
 };
-const sendPushNotification = async (expoPushToken, message) => {
-  const messages = [];
 
-  if (!Expo.isExpoPushToken(expoPushToken)) {
-    console.error(`Invalid Expo Push Token: ${expoPushToken}`);
-    return;
-  }
-
-  messages.push({
-    to: expoPushToken,
-    sound: "default",
-    body: message,
-    data: { withSome: "data" },
-  });
-
-  try {
-    const ticketChunk = await expo.sendPushNotificationsAsync(messages);
-    console.log(ticketChunk);
-  } catch (error) {
-    console.error("Error sending notification:", error);
-  }
-};
 // Send message
 exports.sendDocument = async (messageData) => {
   const {

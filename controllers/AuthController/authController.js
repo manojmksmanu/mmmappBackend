@@ -8,7 +8,10 @@ const crypto = require("crypto");
 const { sendVerificationEmail } = require("../../misc/emailSendFunction");
 const { sendEmail } = require("../../misc/emailSendFunction");
 const { getSocketInstance } = require("../../socket/socket");
+const { Expo } = require("expo-server-sdk");
+const sendPushNotification = require("../../misc/expoPushNotification");
 
+const expo = new Expo();
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
@@ -351,36 +354,9 @@ exports.updatePushToken = async (req, res) => {
   }
 };
 exports.pushtoken = async (req, res) => {
-  const {  expoPushToken } = req.body;
-  console.log("Updating push token for userId:",  expoPushToken);
-  try {
-    await sendPushNotification(expoPushToken);
-
-    return res.status(200).send({ message: "Push token updated successfully" });
-  } catch (error) {
-    console.error("Error updating push token:", error);
-    res.status(500).send({ message: "Failed to update push token" });
-  }
-};
-const sendPushNotification = async (expoPushToken) => {
-  const messages = [];
-
-  if (!Expo.isExpoPushToken(expoPushToken)) {
-    console.error(`Invalid Expo Push Token: ${expoPushToken}`);
-    return;
-  }
-
-  messages.push({
-    to: expoPushToken,
-    sound: "default",
-    body: "hello how are you",
-    data: { withSome: "data" },
-  });
-
-  try {
-    const ticketChunk = await expo.sendPushNotificationsAsync(messages);
-    console.log(ticketChunk);
-  } catch (error) {
-    console.error("Error sending notification:", error);
-  }
+  console.log("hitpushtoken");
+  const { expoPushToken } = req.body;
+  const messageBody = "hello how are you";
+  const data = "this is notification";
+  await sendPushNotification(expoPushToken, messageBody, data);
 };

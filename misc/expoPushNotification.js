@@ -54,7 +54,7 @@ const sendPushNotification = async (
     const message = {
       to: expoPushToken,
       sound: "default",
-      title: "title",
+      title: title,
       body: messageBody,
       data: data || {},
       android: {

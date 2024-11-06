@@ -132,16 +132,8 @@ exports.sendMessage = async (messageData, onlineUsers) => {
       (user) => user.user && user.user._id.toString() !== sender
     );
 
-    console.log(onlineUsers, "onlineusers ");
-
-    // Filter offline users
-    const offlineUsers = otherUsers.filter(
-      (user) => !onlineUsers.includes(user.user._id.toString()) // Check if the user is not in the onlineUsers array
-    );
-
-    if (offlineUsers.length > 0) {
-      // Send notification to offline users
-      const sendNotificationToUsers = offlineUsers.map(async (user) => {
+    if (otherUsers.length > 0) {
+      const sendNotificationToUsers = otherUsers.map(async (user) => {
         try {
           console.log(user.user, "Sending notification to offline user");
           const messageBody = ` ${message}`; // Customize the message as needed
@@ -155,13 +147,14 @@ exports.sendMessage = async (messageData, onlineUsers) => {
             fileUrl,
             fileType,
             replyingMessage,
+            readBy: [sender],
             status: "sent", // You can use dynamic status
           };
 
           const expoPushToken = user.user.expoPushToken;
           if (expoPushToken) {
             // Send push notification
-            await sendPushNotification(expoPushToken, title,messageBody, data);
+            await sendPushNotification(expoPushToken, title, messageBody, data);
           } else {
             console.warn(`No Expo push token for user: ${user.user._id}`);
           }
@@ -215,7 +208,6 @@ exports.sendDocument = async (messageData) => {
     readBy: [sender],
     status: "sent",
   });
-  console.log(newMessage);
   // Update the latest message in the chat and ensure updatedAt is set
   const updatedChat = await NewChat.findOneAndUpdate(
     { _id: chatId },
@@ -226,13 +218,49 @@ exports.sendDocument = async (messageData) => {
     { new: true }
   ).populate("latestMessage");
 
-  //   res
-  //     .status(201)
-  //     .json({ message: "Message created successfully", newMessage });
-  // } catch (error) {
-  //   console.error("Error creating message:", error);
-  //   res.status(500).json({ message: "Server Error" });
-  // }
+  // Get all users except the sender
+  const otherUsers = updatedChat.users.filter(
+    (user) => user.user && user.user._id.toString() !== sender
+  );
+
+  if (otherUsers.length > 0) {
+    const sendNotificationToUsers = otherUsers.map(async (user) => {
+      try {
+        const messageBody = ` ${message}`; // Customize the message as needed
+        const title = ` ${senderName}`; // Customize the message as needed
+        const data = {
+          chatId,
+          sender,
+          senderName,
+          messageId,
+          message,
+          fileUrl,
+          fileType,
+          replyingMessage,
+          readBy: [sender],
+          status: "sent", // You can use dynamic status
+        };
+        const expoPushToken = user.user.expoPushToken;
+        if (expoPushToken) {
+          await sendPushNotification(expoPushToken, title, messageBody, data);
+        } else {
+          console.warn(`No Expo push token for user: ${user.user._id}`);
+        }
+      } catch (error) {
+        console.error(`Error sending notification to ${user.user._id}:`, error);
+      }
+    });
+
+    // Await all notification send operations
+    await Promise.all(sendNotificationToUsers);
+  } else {
+    console.log(
+      "All users are online or this user is the only participant in the chat."
+    );
+  }
+
+  console.log("finish");
+  return updatedChat;
 };
 // Get messages
 exports.getMessages = async (req, res) => {

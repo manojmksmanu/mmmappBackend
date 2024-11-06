@@ -226,7 +226,7 @@ exports.sendDocument = async (messageData) => {
   if (otherUsers.length > 0) {
     const sendNotificationToUsers = otherUsers.map(async (user) => {
       try {
-        const messageBody = `Message:-${message}`; // Customize the message as needed
+        const messageBody = `${message}`; // Customize the message as needed
         const title = ` ${senderName}`; // Customize the message as needed
         const data = {
           chatId,

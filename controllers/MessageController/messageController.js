@@ -86,7 +86,7 @@ const expo = new Expo();
 //     console.error("Error in sendMessage:", error);
 //   }
 // };
-exports.sendMessage = async (messageData, onlineUsers) => {
+exports.sendMessage = async (messageData) => {
   try {
     const {
       chatId,

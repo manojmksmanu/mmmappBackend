@@ -192,7 +192,9 @@ exports.getChatsForUser = async (userId) => {
         path: "latestMessage",
         model: "Message",
       })
-      .sort({ updatedAt: -1 });
+      .populate({ path: "messages", model: "Message" })
+      .sort({ updatedAt: -1 })
+      .exec();
     console.log("updated");
     await deleteChatsForDeletedUsers();
     return chats;

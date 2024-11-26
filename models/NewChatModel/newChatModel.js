@@ -24,6 +24,12 @@ const chatSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message", // Reference to the Message model
     },
+    messages: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message", // Array of references to Message model
+      },
+    ],
   },
   { timestamps: true }
 );

@@ -142,7 +142,6 @@ exports.verifyEmail = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, userType, password } = req.body;
-  console.log(email);
   // Common logic for checking the userType
   const findUserByType = async (userType) => {
     const emailRegex = new RegExp(`^${email}$`, "i"); // Create case-insensitive regex for email
@@ -168,11 +167,17 @@ exports.login = async (req, res) => {
     }
 
     if (await user.matchPassword(password)) {
+      const token = await generateToken(user._id);
       res.json({
-        _id: user._id,
-        name: user.name,
-        isAdmin: user.userType,
-        token: generateToken(user._id),
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          userType: user.userType,
+          whatsappNumber: user.whatsappNumber,
+          phoneNumber: user.phoneNumber,
+        },
+        token: token,
       });
     } else {
       res.status(401).json({ message: "Fill Correct Passowrd 👀👀" });

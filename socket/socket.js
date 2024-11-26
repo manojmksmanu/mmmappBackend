@@ -4,6 +4,7 @@ const {
   sendMessage,
   sendDocument,
 } = require("../controllers/MessageController/messageController");
+const NewChat = require("../models/NewChatModel/newChatModel");
 
 let io;
 let onlineUsers = [];
@@ -22,9 +23,10 @@ function initSocket(server) {
       }
       io.emit("getOnlineUsers", onlineUsers);
     });
-    socket.on("joinRoom", (chatId) => {
-      socket.join(chatId);
-      console.log(`User ${socket.id} joined room ${chatId}`);
+    socket.on("joinRoom", (chatIds) => {
+      chatIds.forEach((chatId) => {
+        socket.join(chatId);
+      });
     });
 
     socket.on("sendMessage", async (messageData) => {
@@ -39,7 +41,7 @@ function initSocket(server) {
         replyingMessage,
         status,
       } = messageData;
-      const newMessage = new Message({
+      const newMessage = {
         chatId,
         sender,
         senderName,
@@ -50,12 +52,24 @@ function initSocket(server) {
         replyingMessage,
         readBy: [sender],
         status: "sent",
-      });
-      console.log('send socket')
+      };
+      console.log("send socket");
       try {
-        const updatedChat = await sendMessage(messageData,onlineUsers);
+        //   const updatedChat = await NewChat.findByIdAndUpdate(
+        //     chatId,
+        //     { $push: { messages: newMessage._id } },
+        //     { new: true, fields: { messages: { $slice: -1 } } }
+        //   );
+        //   if (!updatedChat) {
+        //     socket.emit("ERROR", "Conversation not found");
+        //     return;
+        //   }
+        //   const newMessageUpdated = updatedChat.messages[0];
+
+        await sendMessage(newMessage);
+
         io.emit("fetchAgain", chatId);
-        io.to(chatId).emit("updatedChat", updatedChat);
+        // io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveMessage", newMessage);
         console.log("Message emitted to chatId:", chatId);
       } catch (err) {
@@ -88,9 +102,9 @@ function initSocket(server) {
         status: "sent",
       });
       try {
-        const updatedChat = await sendDocument(messageData);
-        io.emit("fetchAgain", chatId);
-        io.to(chatId).emit("updatedChat", updatedChat);
+        // const updatedChat = await sendDocument(messageData);
+        // io.emit("fetchAgain", chatId);
+        // io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveDocument", newMessage);
         console.log("Document emitted to chatId:", chatId);
       } catch (err) {

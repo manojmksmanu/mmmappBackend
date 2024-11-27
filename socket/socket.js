@@ -29,6 +29,13 @@ function initSocket(server) {
       });
     });
 
+    socket.on("markMessageMMKV", ({ userId, chatId }) => {
+      io.to(chatId).emit("markMessageToReadRealTimeMMKV", {
+        userId: userId,
+        chatId: chatId,
+      });
+    });
+
     socket.on("sendMessage", async (messageData) => {
       const {
         chatId,
@@ -55,23 +62,9 @@ function initSocket(server) {
       };
       console.log("send socket");
       try {
-        //   const updatedChat = await NewChat.findByIdAndUpdate(
-        //     chatId,
-        //     { $push: { messages: newMessage._id } },
-        //     { new: true, fields: { messages: { $slice: -1 } } }
-        //   );
-        //   if (!updatedChat) {
-        //     socket.emit("ERROR", "Conversation not found");
-        //     return;
-        //   }
-        //   const newMessageUpdated = updatedChat.messages[0];
-
         await sendMessage(newMessage);
-
         io.emit("fetchAgain", chatId);
-        // io.to(chatId).emit("updatedChat", updatedChat);
         io.to(chatId).emit("receiveMessage", newMessage);
-        console.log("Message emitted to chatId:", chatId);
       } catch (err) {
         console.log(err, "error");
       }
@@ -102,43 +95,12 @@ function initSocket(server) {
         status: "sent",
       });
       try {
-        // const updatedChat = await sendDocument(messageData);
-        // io.emit("fetchAgain", chatId);
-        // io.to(chatId).emit("updatedChat", updatedChat);
+        await sendDocument(newMessage);
         io.to(chatId).emit("receiveDocument", newMessage);
-        console.log("Document emitted to chatId:", chatId);
       } catch (err) {
         console.error("Error sending document:", err);
       }
     });
-    socket.on("markmessagetoread", async (data) => {
-      const {
-        loggedUserId,
-        chatId,
-        sender,
-        senderName,
-        message,
-        fileUrl,
-        fileType,
-        messageId,
-        readBy,
-        replyingMessage,
-      } = data;
-      const newMessage = {
-        chatId,
-        sender,
-        senderName,
-        message,
-        fileUrl,
-        fileType,
-        messageId,
-        replyingMessage,
-        readBy: [...(readBy || []), loggedUserId],
-        status: "sent",
-      };
-      io.to(chatId).emit("resultofmarkmessagetoread", newMessage);
-    });
-
     socket.on(
       "forwardMessage",
       async ({ chatId, messages, loggedUserId, loggedUserName }) => {
@@ -163,11 +125,12 @@ function initSocket(server) {
                 replyingMessage: "",
                 createdAt: new Date(),
               });
+              await sendDocument(newMessage);
               return newMessage;
             })
           );
           console.log(newMessages, "socketworking");
-          // Emit event to other clients
+
           io.to(chatId).emit("forwarMessageReceived", newMessages);
         } catch (error) {
           console.log(error);

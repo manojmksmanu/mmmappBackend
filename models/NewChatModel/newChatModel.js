@@ -20,16 +20,15 @@ const chatSchema = new mongoose.Schema(
         },
       },
     ],
+    unreadCounts: {
+      type: Map,
+      of: Number, // To store unread count for each user
+      default: {},
+    },
     latestMessage: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message", // Reference to the Message model
     },
-    messages: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Message", // Array of references to Message model
-      },
-    ],
   },
   { timestamps: true }
 );

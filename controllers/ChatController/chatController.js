@@ -192,7 +192,6 @@ exports.getChatsForUser = async (userId) => {
         path: "latestMessage",
         model: "Message",
       })
-      .populate({ path: "messages", model: "Message" })
       .sort({ updatedAt: -1 })
       .exec();
     console.log("updated");
@@ -211,9 +210,8 @@ function createChatIdByDateTime() {
 }
 
 exports.createGroupChat = async (req, res) => {
-  console.log("hitcreategroup");
   const { users, groupName } = req.body;
-  console.log(users, "users", groupName);
+
   if (!users || users.length < 2) {
     return res.status(400).json({
       message: "Minimum of 2 users are required to create a group chat",
@@ -221,20 +219,13 @@ exports.createGroupChat = async (req, res) => {
   }
 
   try {
-    // Check if group name already exists
-    // const existingGroupChat = await NewChat.findOne({ groupName });
-    // if (existingGroupChat) {
-    //   return res.status(400).json({
-    //     message: "Group name already exists. Please choose a different name.",
-    //   });
-    // }
-
+    // Create the new group chat
     const newGroupChat = new NewChat({
       chatId: createChatIdByDateTime(),
       chatType: "group",
       groupName: groupName,
       users: users.map((user) => ({
-        user: user._id,
+        user: user._id, // Assuming user._id exists
         userType: user.userType,
         refModel: ["Admin", "Super-Admin", "Sub-Admin", "Co-Admin"].includes(
           user.userType
@@ -244,62 +235,24 @@ exports.createGroupChat = async (req, res) => {
       })),
     });
 
-    await newGroupChat.save();
-    console.log(`Created group chat: ${groupName}`);
+    // Save the group chat to the database
+    const savedGroupChat = await newGroupChat.save();
 
     res.status(201).json({
       message: "Group chat created successfully",
-      chat: newGroupChat,
+      chat: savedGroupChat, // Return the saved group chat
     });
   } catch (error) {
     console.error("Error creating group chat:", error);
     res.status(500).json({
       message: "Error creating group chat",
-      error: error.message,
+      error: error.message, // Include error message for debugging
     });
   }
 };
 
-//   const { users, groupName } = req.body;
-//   console.log(users, groupName);
-//   try {
-//     const newGroupChat = new NewChat({
-//       chatId: createChatIdByDateTime(),
-//       chatType: "group",
-//       groupName: groupName,
-//       users: users.map((user) => ({
-//         user: user._id,
-//         userType: user.userType,
-//         refModel: ["Admin", "Super-Admin", "Sub-Admin", "Co-Admin"].includes(
-//           user.userType
-//         )
-//           ? "Admin"
-//           : user.userType,
-//       })),
-//     });
-
-//     console.log("hello world");
-//     await newGroupChat.save();
-//     console.log(`Created group chat: ${groupName} `);
-
-//     // Send a success response with the newly created group chat
-//     res.status(201).json({
-//       message: "Group chat created successfully",
-//       chat: newGroupChat,
-//     });
-//   } catch (error) {
-//     console.error("Error creating group chat:", error);
-
-//     // Send an error response
-//     res.status(500).json({
-//       message: "Error creating group chat",
-//       error: error.message,
-//     });
-//   }
-// };
 exports.addUserToGroupChat = async (req, res) => {
   const { chatId, users } = req.body;
-  console.log(users, chatId);
   try {
     const groupChat = await NewChat.findById(chatId);
 
@@ -328,11 +281,19 @@ exports.addUserToGroupChat = async (req, res) => {
       }
     }
     await groupChat.save();
-    await groupChat.populate("users.user");
+    const groupChatUpdated = await NewChat.findOne({ _id: chatId })
+      .populate({
+        path: "users.user",
+        select: "-password",
+      })
+      .populate({
+        path: "latestMessage",
+        model: "Message",
+      });
     res.status(200).json({
       message: "Users added to group chat successfully",
       alreadyInGroup,
-      chat: groupChat,
+      chat: groupChatUpdated,
     });
   } catch (error) {
     console.error("Error adding user to group chat:", error);
@@ -369,10 +330,19 @@ exports.removeUserFromGroupChat = async (req, res) => {
 
     groupChat.users.splice(userIndex, 1);
     await groupChat.save();
-    await groupChat.populate("users.user");
+    const groupChatUpdated = await NewChat.findOne({ _id: chatId })
+      .populate({
+        path: "users.user",
+        select: "-password",
+      })
+      .populate({
+        path: "latestMessage",
+        model: "Message",
+      });
+
     res.status(200).json({
-      message: "User removed from group chat successfully",
-      chat: groupChat,
+      message: "Group chat renamed successfully",
+      chat: groupChatUpdated,
     });
   } catch (error) {
     console.error("Error removing user from group chat:", error);
@@ -405,11 +375,7 @@ exports.deleteGroupChat = async (req, res) => {
   }
 };
 exports.renameGroupChat = async (req, res) => {
-  console.log("hitRenameGroup");
-
   const { chatId, newGroupName } = req.body;
-  console.log(chatId, newGroupName);
-
   if (!chatId || !newGroupName) {
     return res.status(400).json({
       message: "Chat ID and new group name are required",
@@ -417,7 +383,6 @@ exports.renameGroupChat = async (req, res) => {
   }
 
   try {
-    // Check if group exists
     const groupChat = await NewChat.findOne({ _id: chatId });
     if (!groupChat) {
       console.log("Group chat not found");
@@ -426,19 +391,23 @@ exports.renameGroupChat = async (req, res) => {
       });
     }
 
-    // Log before updating
-    console.log(
-      `Renaming group chat from ${groupChat.groupName} to ${newGroupName}`
-    );
-
     // Update the group name
     groupChat.groupName = newGroupName;
     await groupChat.save();
-    await groupChat.populate("users.user");
+    const groupChatUpdated = await NewChat.findOne({ _id: chatId })
+      .populate("users.user")
+      .populate({
+        path: "users.user",
+        select: "-password",
+      })
+      .populate({
+        path: "latestMessage",
+        model: "Message",
+      });
 
     res.status(200).json({
       message: "Group chat renamed successfully",
-      chat: groupChat,
+      chat: groupChatUpdated,
     });
   } catch (error) {
     console.error("Error renaming group chat:", error);

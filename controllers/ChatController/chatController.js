@@ -43,10 +43,7 @@ exports.createChatsForAllUsers = async () => {
       for (let j = i + 1; j < users.length; j++) {
         const user1 = users[i];
         const user2 = users[j];
-
-        // Check if user1 is allowed to chat with user2
         if (chatPermissions[user1.userType]?.includes(user2.userType)) {
-          // Check if a chat already exists between these users
           const existingChat = await NewChat.findOne({
             $and: [{ "users.user": user1._id }, { "users.user": user2._id }],
           });
@@ -79,15 +76,13 @@ exports.createChatsForAllUsers = async () => {
               users: [
                 {
                   user: user1._id,
-                  userType: user1.userType, // Assign userType for user1
-                  // refModel: refModel1, // Assign refModel for user1
-                  refModel: refModel1, // Assign refModel for user1
+                  userType: user1.userType,
+                  refModel: refModel1, 
                 },
                 {
                   user: user2._id,
-                  userType: user2.userType, // Assign userType for user2
-                  // refModel: refModel2, // Assign refModel for user2
-                  refModel: refModel2, // Assign refModel for user2
+                  userType: user2.userType, 
+                  refModel: refModel2,
                 },
               ],
             });
@@ -110,7 +105,6 @@ exports.createChatsForAllUsers = async () => {
 };
 
 const createChatsForNewLoggedUser = async (loggedUser) => {
-  console.log(loggedUser, "sdkfbdsjfgjsdgfjsdf");
   try {
     const users = await getAllUsersForChatCreation();
 
@@ -185,7 +179,6 @@ const createChatsForNewLoggedUser = async (loggedUser) => {
 exports.getChatsForUser = async (req, res) => {
   const { userId } = req.params; 
   const { loggedUser } = req.query;
-  console.log(loggedUser, "loggeduser");
   try {
     let chats = await NewChat.find({ "users.user": userId })
       .populate({

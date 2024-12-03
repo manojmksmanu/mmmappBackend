@@ -113,6 +113,7 @@ exports.signup = async (req, res) => {
         "User registered. Please check your email to verify your account.",
     });
   } catch (error) {
+     console.error("Signup error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

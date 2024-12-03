@@ -194,7 +194,6 @@ exports.getChatsForUser = async (userId) => {
       })
       .sort({ updatedAt: -1 })
       .exec();
-    console.log("updated");
     await deleteChatsForDeletedUsers();
     return chats;
   } catch (error) {

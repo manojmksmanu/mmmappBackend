@@ -17,7 +17,6 @@ const getAllUserIds = async () => {
 
 exports.deleteChatsForDeletedUsers = async () => {
   try {
-    // Get all user IDs from the database
     const currentUserIds = await getAllUserIds();
 
     // Find all chats

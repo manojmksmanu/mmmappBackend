@@ -18,7 +18,7 @@ const chatPermissions = {
 getAllUsersForChatCreation = async () => {
   const admins = await Admin.find({});
   const tutors = await Tutor.find({ isIpaApproved: true });
-  const students = await Student.find({});
+  const students = await Student.find({ isVerified: true });
 
   return [
     ...admins.map((admin) => ({
@@ -109,66 +109,67 @@ exports.createChatsForAllUsers = async () => {
   }
 };
 
-exports.createChatsForLoggedUser = async () => {
+const createChatsForNewLoggedUser = async (loggedUser) => {
+  console.log(loggedUser, "sdkfbdsjfgjsdgfjsdf");
   try {
     const users = await getAllUsersForChatCreation();
 
-    for (let j = i + 1; j < users.length; j++) {
-      const user1 = users[i];
+    for (let j = 0; j < users.length; j++) {
+      const user1 = loggedUser;
       const user2 = users[j];
 
-      // Check if user1 is allowed to chat with user2
-      if (chatPermissions[user1.userType]?.includes(user2.userType)) {
-        // Check if a chat already exists between these users
+      if (chatPermissions[loggedUser.userType]?.includes(user2.userType)) {
+        // const chatId = createChatId(user1, user2);
+
+        // Check if chat already exists by chatId
+        // const existingChat = await NewChat.findOne({ chatId });
         const existingChat = await NewChat.findOne({
-          $and: [{ "users.user": user1._id }, { "users.user": user2._id }],
+          $and: [{ "users.user": loggedUser._id }, { "users.user": user2._id }],
         });
 
-        const chatId = createChatId(user1, user2);
+        const chatId = createChatId(loggedUser, user2);
 
-        const refModel1 = [
-          "Admin",
-          "Super-Admin",
-          "Sub-Admin",
-          "Co-Admin",
-        ].includes(user1.userType)
-          ? "Admin"
-          : user1.userType;
-        const refModel2 = [
-          "Admin",
-          "Super-Admin",
-          "Sub-Admin",
-          "Co-Admin",
-        ].includes(user2.userType)
-          ? "Admin"
-          : user2.userType;
-
-        // If no existing chat, create a new one
         if (!existingChat) {
-          const chatBetween = `Created chat between ${user1.userType} ${user1.name} and ${user2.userType} ${user2.name}`;
+          const refModel1 = loggedUser.userType.includes("Admin")
+            ? "Admin"
+            : user1.userType;
+          const refModel2 = user2.userType.includes("Admin")
+            ? "Admin"
+            : user2.userType;
+
           const newChat = new NewChat({
-            chatId: chatId,
+            chatId,
             chatType: "one-to-one",
             users: [
               {
-                user: user1._id,
-                userType: user1.userType, // Assign userType for user1
-                // refModel: refModel1, // Assign refModel for user1
-                refModel: refModel1, // Assign refModel for user1
+                user: loggedUser,
+                userType: loggedUser.userType,
+                refModel: refModel1,
               },
               {
                 user: user2._id,
-                userType: user2.userType, // Assign userType for user2
-                // refModel: refModel2, // Assign refModel for user2
-                refModel: refModel2, // Assign refModel for user2
+                userType: user2.userType,
+                refModel: refModel2,
               },
             ],
           });
 
-          await newChat.save();
-          console.log(
-            `Created chat between ${user1.userType} (${user1._id}) and ${user2.userType} (${user2._id})`
-          );
+          try {
+            await newChat.save();
+            console.log(
+              `Created chat between ${loggedUser.userType} (${loggedUser._id}) and ${user2.userType} (${user2._id})`
+            );
+          } catch (error) {
+            // Handle potential unique constraint violation here
+            if (error.code === 11000) {
+              // Check for duplicate key error code
+              console.error(
+                `Duplicate chat detected (chatId: ${chatId}). Skipping creation.`
+              );
+            } else {
+              throw error; // Re-throw other errors
+            }
+          }
         } else {
           console.log(
             `Chat already exists between ${user1.userType} (${user1._id}) and ${user2.userType} (${user2._id})`
@@ -178,12 +179,15 @@ exports.createChatsForLoggedUser = async () => {
     }
   } catch (error) {
     console.error("Error creating chats:", error);
+    throw error; // Rethrow the error to be handled upstream
   }
 };
-
-exports.getChatsForUser = async (userId) => {
+exports.getChatsForUser = async (req, res) => {
+  const { userId } = req.params; 
+  const { loggedUser } = req.query;
+  console.log(loggedUser, "loggeduser");
   try {
-    const chats = await NewChat.find({ "users.user": userId })
+    let chats = await NewChat.find({ "users.user": userId })
       .populate({
         path: "users.user",
         select: "-password",
@@ -194,11 +198,29 @@ exports.getChatsForUser = async (userId) => {
       })
       .sort({ updatedAt: -1 })
       .exec();
-    await deleteChatsForDeletedUsers();
-    return chats;
+    if (chats.length === 0) {
+      console.log("No chats found. Creating new chats...");
+      if (loggedUser && loggedUser.userType) {
+        await createChatsForNewLoggedUser(loggedUser);
+      } else console.log("logged user is missing");
+
+      chats = await NewChat.find({ "users.user": userId })
+        .populate({
+          path: "users.user",
+          select: "-password",
+        })
+        .populate({
+          path: "latestMessage",
+          model: "Message",
+        })
+        .sort({ updatedAt: -1 })
+        .exec();
+    }
+    await deleteChatsForDeletedUsers(); 
+    res.status(200).json(chats);
   } catch (error) {
     console.error("Error fetching chats for user:", error);
-    throw error;
+    throw error; 
   }
 };
 

@@ -46,7 +46,7 @@ console.log(process.env.OTP_SECRET_KEY);
 
 const getData = async () => {
   await deleteChatsForDeletedUsers();
-  // const data = await createChatsForAllUsers();
+  const data = await createChatsForAllUsers();
 };
 console.log("on indexpage");
 getData();

@@ -8,10 +8,8 @@ const crypto = require("crypto");
 const { sendVerificationEmail } = require("../../misc/emailSendFunction");
 const { sendEmail } = require("../../misc/emailSendFunction");
 const { getSocketInstance } = require("../../socket/socket");
-const { Expo } = require("expo-server-sdk");
 const sendPushNotification = require("../../misc/expoPushNotification");
 
-const expo = new Expo();
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
@@ -30,33 +28,25 @@ exports.signup = async (req, res) => {
     whatsappCountry,
     subjects,
   } = req.body;
-  console.log(req.body);
   try {
-    console.log("inside try");
     let existingUser;
-    // Check if email exists for Admin
     if (userType === "Admin") {
       existingUser = await Admin.findOne({ email });
     }
-    // Check if email exists for Student
     else if (userType === "Student") {
       existingUser = await Student.findOne({ email });
     }
-    // Check if email exists for Tutor
     else if (userType === "Tutor") {
       existingUser = await Tutor.findOne({ email });
     } else {
       return res.status(400).json({ message: "Invalid user type" });
     }
-
-    // If email already exists
     if (existingUser) {
       console.log("Email already exists. Please try a different email. ");
       return res.status(400).json({
         message: "Email already exists. Please try a different email.",
       });
     }
-    // Create new user
     let user;
     if (userType === "Admin") {
       user = new Admin({

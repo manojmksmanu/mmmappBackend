@@ -11,10 +11,7 @@ const express = require("express");
 const { protect } = require("../middleware/AuthMiddleWare/authMiddleware");
 const router = express.Router();
 
-router.get("/:userId/chats", protect, async (req, res) => {
-  const chats = await getChatsForUser(req.params.userId);
-  res.json(chats);
-});
+router.get("/:userId/chats", protect, getChatsForUser);
 
 router.post("/creategroup", protect, createGroupChat);
 router.patch("/grouprename", protect, renameGroupChat);

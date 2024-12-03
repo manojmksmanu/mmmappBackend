@@ -6,10 +6,10 @@ const Tutor = require("../models/TutorModel/tutorModel");
 const { deleteChatsForDeletedUsers } = require("./deleteChat");
 
 exports.createChatId = (user1, user2) => {
-  // Ensure that the chatId is always the same regardless of the order of the users
-  return user1._id < user2._id
-    ? `${user1._id}-${user2._id}`
-    : `${user2._id}-${user1._id}`;
+  const userIds = [user1._id, user2._id].sort();
+
+  // Generate a unique chatId by combining the sorted user IDs
+  return `${userIds[0]}-${userIds[1]}`;
 };
 
 exports.findUserById = async ({ userId }) => {

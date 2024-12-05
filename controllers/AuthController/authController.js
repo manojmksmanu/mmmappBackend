@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+//  JwtService: require("./JwtService");
 const Admin = require("../../models/AdminModel/adminModel");
 const Student = require("../../models/StudentModel/studentModel");
 const Tutor = require("../../models/TutorModel/tutorModel");
@@ -9,7 +10,7 @@ const { sendVerificationEmail } = require("../../misc/emailSendFunction");
 const { sendEmail } = require("../../misc/emailSendFunction");
 const { getSocketInstance } = require("../../socket/socket");
 const sendPushNotification = require("../../misc/expoPushNotification");
-
+const JwtService = require("../../misc/jwtService");
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: "30d",
@@ -32,11 +33,9 @@ exports.signup = async (req, res) => {
     let existingUser;
     if (userType === "Admin") {
       existingUser = await Admin.findOne({ email });
-    }
-    else if (userType === "Student") {
+    } else if (userType === "Student") {
       existingUser = await Student.findOne({ email });
-    }
-    else if (userType === "Tutor") {
+    } else if (userType === "Tutor") {
       existingUser = await Tutor.findOne({ email });
     } else {
       return res.status(400).json({ message: "Invalid user type" });
@@ -103,7 +102,7 @@ exports.signup = async (req, res) => {
         "User registered. Please check your email to verify your account.",
     });
   } catch (error) {
-     console.error("Signup error:", error);
+    console.error("Signup error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -142,7 +141,7 @@ exports.login = async (req, res) => {
   };
   try {
     const user = await findUserByType(userType);
-
+console.log(user)
     if (!user) {
       return res
         .status(401)
@@ -158,7 +157,11 @@ exports.login = async (req, res) => {
     }
 
     if (await user.matchPassword(password)) {
-      const token = await generateToken(user._id);
+      const token = JwtService.sign({
+        _id: user._id,
+        userType: user.userType,
+      });
+      console.log(token, "token");
       res.json({
         user: {
           _id: user._id,
@@ -174,6 +177,7 @@ exports.login = async (req, res) => {
       res.status(401).json({ message: "Fill Correct Passowrd 👀👀" });
     }
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: "Server Error" });
   }
 };

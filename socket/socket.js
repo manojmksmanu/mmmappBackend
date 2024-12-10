@@ -60,7 +60,6 @@ function initSocket(server) {
         readBy: [sender],
         status: "sent",
       };
-      console.log("send socket");
       try {
         await sendMessage(newMessage);
         io.emit("fetchAgain", chatId);

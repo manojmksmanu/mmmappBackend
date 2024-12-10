@@ -1,11 +1,12 @@
 const express = require("express");
 const { protect } = require("../middleware/AuthMiddleWare/authMiddleware");
-const UserReport = require("../models/ReportModel/messageReportModel");
+const UserReport = require("../models/ReportModel/userReportModel");
 const MessageReport = require("../models/ReportModel/messageReportModel");
 const router = express.Router();
 
-router.post("/userreport", protect, async (req, res) => {
+router.post("/report-user", protect, async (req, res) => {
   const { reporterId, reportedUserId, reason } = req.body;
+  console.log(reportedUserId, reporterId, reason);
 
   if (!reporterId || !reportedUserId || !reason) {
     return res.status(400).json({ error: "All fields are required" });
@@ -19,9 +20,12 @@ router.post("/userreport", protect, async (req, res) => {
     });
 
     await userReport.save();
-    res.status(200).json({ message: "User reported successfully" });
+    res.status(200).json({
+      message:
+        "Thank you for helping us maintain a safe community If any inappropriate content is detected, we will take appropriate action to maintain a safe environment.",
+    });
   } catch (err) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "something went wrong" });
   }
 });
 router.post("/report-messages", protect, async (req, res) => {

@@ -212,6 +212,7 @@ exports.getMessages = async (req, res) => {
 
 exports.forwardMessages = async (req, res) => {
   const { chatId, messages, loggedUserId, loggedUserName } = req.body;
+  console.log(messages, chatId);
   try {
     const newMessages = await Promise.all(
       messages.map(async (msg) => {
@@ -250,7 +251,7 @@ exports.markMessagesAsRead = async (req, res) => {
     }
 
     if (updatingChat.unreadCounts.has(userId)) {
-      updatingChat.unreadCounts.set(userId, 0); 
+      updatingChat.unreadCounts.set(userId, 0);
     }
     await updatingChat.save({ timestamps: false });
     const messages = await Message.find({ chatId });
@@ -266,8 +267,8 @@ exports.markMessagesAsRead = async (req, res) => {
       if (!message.readBy.includes(userId)) {
         message.readBy.push(userId);
         const allRead = allUserIds.every((id) => message.readBy.includes(id));
-        message.status = allRead ? "read" : "sent"; 
-        return await message.save(); 
+        message.status = allRead ? "read" : "sent";
+        return await message.save();
       }
     });
     await Promise.all(updates);

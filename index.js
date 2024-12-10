@@ -41,10 +41,10 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/country", countryRoutes);
 app.use("/api/subject", subjectRoutes);
 app.use("/api", userRoutes);
-app.use("/api/report",reportRoutes);
+app.use("/api/report", reportRoutes);
 
 const getData = async () => {
-  await deleteChatsForDeletedUsers();
+  // await deleteChatsForDeletedUsers();
   // const data = await createChatsForAllUsers();
 };
 console.log("on indexpage");

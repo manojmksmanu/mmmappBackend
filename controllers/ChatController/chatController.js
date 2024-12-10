@@ -77,11 +77,11 @@ exports.createChatsForAllUsers = async () => {
                 {
                   user: user1._id,
                   userType: user1.userType,
-                  refModel: refModel1, 
+                  refModel: refModel1,
                 },
                 {
                   user: user2._id,
-                  userType: user2.userType, 
+                  userType: user2.userType,
                   refModel: refModel2,
                 },
               ],
@@ -177,7 +177,7 @@ const createChatsForNewLoggedUser = async (loggedUser) => {
   }
 };
 exports.getChatsForUser = async (req, res) => {
-  const { userId } = req.params; 
+  const { userId } = req.params;
   const { loggedUser } = req.query;
   try {
     let chats = await NewChat.find({ "users.user": userId })
@@ -209,11 +209,11 @@ exports.getChatsForUser = async (req, res) => {
         .sort({ updatedAt: -1 })
         .exec();
     }
-    await deleteChatsForDeletedUsers(); 
+    await deleteChatsForDeletedUsers();
     res.status(200).json(chats);
   } catch (error) {
     console.error("Error fetching chats for user:", error);
-    throw error; 
+    throw error;
   }
 };
 

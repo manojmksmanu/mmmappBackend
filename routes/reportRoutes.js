@@ -6,7 +6,6 @@ const router = express.Router();
 
 router.post("/report-user", protect, async (req, res) => {
   const { reporterId, reportedUserId, reason } = req.body;
-  console.log(reportedUserId, reporterId, reason);
 
   if (!reporterId || !reportedUserId || !reason) {
     return res.status(400).json({ error: "All fields are required" });
@@ -57,7 +56,6 @@ router.post("/report-messages", protect, async (req, res) => {
         "Thank you! Your report has been successfully submitted and will be reviewed shortly",
     });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -29,6 +29,7 @@ const chatSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message", // Reference to the Message model
     },
+    blockedUsers: [mongoose.Types.ObjectId],
   },
   { timestamps: true }
 );

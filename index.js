@@ -8,6 +8,7 @@ const countryRoutes = require("./routes/countryRoutes");
 const subjectRoutes = require("./routes/subjectRoutes");
 const userRoutes = require("./routes/userRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const blockuserRoutes = require("./routes/blockuserRoutes");
 const cors = require("cors");
 const { initSocket } = require("./socket/socket");
 const { deleteChatsForDeletedUsers } = require("./misc/deleteChat");
@@ -42,6 +43,7 @@ app.use("/api/country", countryRoutes);
 app.use("/api/subject", subjectRoutes);
 app.use("/api", userRoutes);
 app.use("/api/report", reportRoutes);
+app.use("/api/block", blockuserRoutes);
 
 const getData = async () => {
   // await deleteChatsForDeletedUsers();
